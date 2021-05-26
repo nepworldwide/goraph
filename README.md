@@ -1,4 +1,5 @@
 ## Golang Graph
+
 [![Build Status](https://travis-ci.org/starwander/goraph.svg?branch=master)](https://travis-ci.org/starwander/goraph)
 [![codecov](https://codecov.io/gh/starwander/goraph/branch/master/graph/badge.svg)](https://codecov.io/gh/starwander/goraph)
 [![Go Report Card](https://goreportcard.com/badge/github.com/starwander/goraph)](https://goreportcard.com/report/github.com/starwander/goraph)
@@ -15,39 +16,47 @@ Current implemented(&radic;) and planned(&times;) algorithms:
 | :-------: | :-----: | :-----: | :-------------: | :------: | :---------: | :---------: | :------------: | :-----------: | :---------: | :--------------: | :---------------: |
 |  Complex  | O(V+E)  | O(V+E)  |      O(V+E)     | O(ElogE) | O(E+VlogV)¹ | O(E+VlogV)¹ | O(KV(E+VlogV)) |   O(KVlogV)   |    O(VE)    | O(V<sup>3</sup>) | O(VE<sup>2</sup>) |
 |  Status   | &times; | &times; |     &times;     | &times;  |   &times;   |   &radic;   |    &radic;     |    &radic;    |   &times;   |     &times;      |      &times;      |
+
 ¹ With Fibonacci heap.
 
-##Algorithms Introduction
+## Algorithms Introduction
 
 * BFS: breadth first search.
 
 * DFS: depth first search.
 
-* TopologicalSort: is a linear ordering of a directed graph's vertices such that for every directed edge uv from vertex u to vertex v, u comes before v in the ordering.
+* TopologicalSort: is a linear ordering of a directed graph's vertices such that for every directed edge uv from vertex
+  u to vertex v, u comes before v in the ordering.
 
-* Kruskal: is a minimum-spanning-tree algorithm which finds an edge of the least possible weight that connects any two trees in the forest.
+* Kruskal: is a minimum-spanning-tree algorithm which finds an edge of the least possible weight that connects any two
+  trees in the forest.
 
 * Prim: is a greedy algorithm that finds a minimum spanning tree for a weighted undirected graph
 
-* Dijkstra: computes shortest paths from a single source vertex to all of the other vertices in a graph with non-negative edge cost.
+* Dijkstra: computes shortest paths from a single source vertex to all of the other vertices in a graph with
+  non-negative edge cost.
 
 * Yen: computes K-shortest loopless paths between two vertex in a graph with non-negative edge cost.
 
 * Kisp: computes K-shortest independent paths between two vertex in a graph with non-negative edge cost.
 
-* BellmanFord: computes shortest paths from a single source vertex to all of the other vertices in a weighted digraph with positive or negative edge weights.
+* BellmanFord: computes shortest paths from a single source vertex to all of the other vertices in a weighted digraph
+  with positive or negative edge weights.
 
-* FloydWarshall: computes all-pairs shortest paths in a weighted graph with positive or negative edge weights (but with no negative cycles).
+* FloydWarshall: computes all-pairs shortest paths in a weighted graph with positive or negative edge weights (but with
+  no negative cycles).
 
 * EdmondsKarp: computes the maximum flow in a flow network(graph).
 
-##Requirements
-#####Download this package and its dependency
+## Requirements
+
+##### Download this package and its dependency
 
     go get github.com/starwander/GoFibonacciHeap
     go get github.com/starwander/goraph
 
-#####Implements Vertex interface of this package if you want to use AddVertexWithEdges(optional):
+##### Implements Vertex interface of this package if you want to use AddVertexWithEdges(optional):
+
 ```go
 type Vertex interface {
 	ID() ID
@@ -58,29 +67,32 @@ type Edge interface {
 	Get() (from ID, to ID, weight float64)
 }
 ```
+
 ## Supported Operations
 
 * Graph operations:
- - GetVertex: get a vertex by input id.
- - GetEdge: gets the edge between the two vertices by input ids.
- - GetEdgeWeight: gets the weight of the edge between the two vertices by input ids.
- - AddVertex: adds a new vertex into the graph.
- - AddEdge: adds a new edge between the vertices by the input ids.
- - UpdateEdgeWeight: updates the weight of the edge between vertices by the input ids.
- - DeleteVertex: deletes a vertex from the graph and gets the value of the vertex.
- - DeleteEdge: deletes the edge between the vertices by the input id from the graph and gets the value of edge.
- - AddVertexWithEdges: adds a vertex value which implements Vertex interface.
- - CheckIntegrity: checks if any edge connects to or from unknown vertex.
- - GetPathWeight: gets the total weight along the path by input ids.
- - DisableEdge: disables the edge for further calculation.
- - DisableVertex: disables the vertex for further calculation.
- - DisablePath: disables all the vertices in the path for further calculation.
- - Reset: enables all vertices and edges for further calculation.
+
+- GetVertex: get a vertex by input id.
+- GetEdge: gets the edge between the two vertices by input ids.
+- GetEdgeWeight: gets the weight of the edge between the two vertices by input ids.
+- AddVertex: adds a new vertex into the graph.
+- AddEdge: adds a new edge between the vertices by the input ids.
+- UpdateEdgeWeight: updates the weight of the edge between vertices by the input ids.
+- DeleteVertex: deletes a vertex from the graph and gets the value of the vertex.
+- DeleteEdge: deletes the edge between the vertices by the input id from the graph and gets the value of edge.
+- AddVertexWithEdges: adds a vertex value which implements Vertex interface.
+- CheckIntegrity: checks if any edge connects to or from unknown vertex.
+- GetPathWeight: gets the total weight along the path by input ids.
+- DisableEdge: disables the edge for further calculation.
+- DisableVertex: disables the vertex for further calculation.
+- DisablePath: disables all the vertices in the path for further calculation.
+- Reset: enables all vertices and edges for further calculation.
 
 * Algorithm operations:
- - Dijkstra: gets the shortest path from one vertex to all other vertices in the graph.
- - Yen: gets top k shortest loopless path between two vertex in the graph.
- - Kisp: gets top k shortest independent path between two vertex in the graph.
+
+- Dijkstra: gets the shortest path from one vertex to all other vertices in the graph.
+- Yen: gets top k shortest loopless path between two vertex in the graph.
+- Kisp: gets top k shortest independent path between two vertex in the graph.
 
 ## Example
 
