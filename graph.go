@@ -30,17 +30,21 @@ type Edge interface {
 type Graph struct {
 	vertices map[ID]*vertex
 	egress   map[ID]map[ID][]*edge
-	//ingress  map[ID]map[ID]*edge
 }
 
 type vertex struct {
 	enable bool
+	ID string
+	Name   string
 }
 
 type edge struct {
 	weight  float64
 	enable  bool
 	changed bool
+
+	LocalPort string
+	RemotePort string
 }
 
 func (edge *edge) getWeight() float64 {
@@ -52,14 +56,47 @@ func NewGraph() *Graph {
 	graph := new(Graph)
 	graph.vertices = make(map[ID]*vertex)
 	graph.egress = make(map[ID]map[ID][]*edge)
-	//graph.ingress = make(map[ID]map[ID]*edge)
 
 	return graph
 }
 
 // GetVertex get a vertex by input id.
 // Try to get a vertex not in the graph will get an error.
-func (graph *Graph) GetVertex(id ID) (vertex interface{}, err error) {
+func (graph *Graph) HasVertex(id ID) (bool) {
+	if _, exists := graph.vertices[id]; exists {
+		return true
+	}
+
+	return false
+}
+
+func (graph *Graph) HasEdge(from ID, to ID, localPort, remotePort string) bool {
+	if edges, exists := graph.egress[from][to]; exists {
+		for _, edge := range edges {
+			if edge.LocalPort == localPort && edge.RemotePort == remotePort {
+				return true
+			}
+		}
+	}
+
+	return false
+}
+
+func (graph *Graph) GetEdge(from ID, to ID, localPort, remotePort string) (*edge, error) {
+	if edges, exists := graph.egress[from][to]; exists {
+		for _, edge := range edges {
+			if edge.LocalPort == localPort && edge.RemotePort == remotePort {
+				return edge, nil
+			}
+		}
+	}
+
+	return nil, fmt.Errorf("Edge between %s (%s) and %s (%s) do not exist", from, to, localPort, remotePort)
+}
+
+// GetVertex get a vertex by input id.
+// Try to get a vertex not in the graph will get an error.
+func (graph *Graph) GetVertex(id ID) (vertex *vertex, err error) {
 	if v, exists := graph.vertices[id]; exists {
 		vertex = v
 		return
@@ -108,14 +145,18 @@ func (graph *Graph) GetEdgeWeight(from ID, to ID) (float64, error) {
 	return math.Inf(1), nil
 }
 
+func (graph *Graph) GetAllVertices() map[ID]*vertex {
+	return graph.vertices
+}
+
 // AddVertex adds a new vertex into the graph.
 // Try to add a duplicate vertex will get an error.
-func (graph *Graph) AddVertex(id ID) error {
+func (graph *Graph) AddVertex(id ID, name string) error {
 	if _, exists := graph.vertices[id]; exists {
 		return fmt.Errorf("Vertex %v is duplicate", id)
 	}
 
-	graph.vertices[id] = &vertex{true}
+	graph.vertices[id] = &vertex{true,id.(string), name}
 	graph.egress[id] = make(map[ID][]*edge)
 	//graph.ingress[id] = make(map[ID]*edge)
 
@@ -126,7 +167,7 @@ func (graph *Graph) AddVertex(id ID) error {
 // Try to add an edge with -Inf weight will get an error.
 // Try to add an edge from or to a vertex not in the graph will get an error.
 // Try to add a duplicate edge will get an error.
-func (graph *Graph) AddEdge(from ID, to ID, weight float64) error {
+func (graph *Graph) AddEdge(from ID, to ID, localPort, remotePort string, weight float64) error {
 	if weight == math.Inf(-1) {
 		return fmt.Errorf("-inf weight is reserved for internal usage")
 	}
@@ -139,12 +180,18 @@ func (graph *Graph) AddEdge(from ID, to ID, weight float64) error {
 		return fmt.Errorf("Vertex(to) %v is not found", to)
 	}
 
-	//if _, exists := graph.egress[from][to]; exists {
-	//	return fmt.Errorf("Edge from %v to %v is duplicate", from, to)
-	//}
+	if graph.HasEdge(from, to, localPort, remotePort) {
+		return fmt.Errorf("Edge from %v (%s) to %v (%s) is duplicate", from, localPort, to, remotePort)
+	}
 
 	// If we got this far, we can create the edge memory pointer and assign it.
-	edge := &edge{weight, true, false}
+	edge := &edge{
+		weight:     weight,
+		enable:     true,
+		changed:    false,
+		LocalPort:  localPort,
+		RemotePort: remotePort,
+	}
 
 	graph.egress[from][to] = append(graph.egress[from][to], edge)
 	//graph.ingress[to][from] = edge
@@ -213,6 +260,31 @@ func (graph *Graph) DeleteEdge(from ID, to ID) interface{} {
 		delete(graph.egress[from], to)
 		//delete(graph.ingress[to], from)
 		return edge
+	}
+
+	return nil
+}
+
+// DeleteEdge deletes the edge between the vertices by the input id from the graph and gets the value of edge.
+// Try to delete an edge from or to a vertex not in the graph will get an error.
+// Try to delete an edge between disconnected vertices will get a nil.
+func (graph *Graph) DeleteEdgeByLocalPort(from ID, localPort string) *edge {
+	// First we need a list of all the vertices we have
+	all := graph.GetAllVertices()
+
+	// Now we need to find where this vertex is linked to any other vertex
+	for to, _ := range all {
+		if _, exists := graph.egress[from][to]; exists { // If the link exists
+			for i, edge := range graph.egress[from][to] { // Range over all the edges
+				if edge.LocalPort == localPort { // If the localport matches
+					graph.egress[from][to] = append(graph.egress[from][to][:i], graph.egress[from][to][i+1:]...) //slick trick, to kick out this guy.
+
+					fmt.Println(from, "is not longer connected from", edge.LocalPort, "to", to, edge.RemotePort)
+
+					return edge
+				}
+			}
+		}
 	}
 
 	return nil
