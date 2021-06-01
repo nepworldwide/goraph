@@ -7,6 +7,8 @@ import (
 	"math"
 )
 
+var vIndex = 0
+
 // ID uniquely identify a vertex.
 type ID interface{}
 
@@ -34,7 +36,8 @@ type Graph struct {
 
 type vertex struct {
 	enable bool
-	ID string
+	Index  int
+	ID     string
 	Name   string
 }
 
@@ -43,7 +46,10 @@ type edge struct {
 	enable  bool
 	changed bool
 
+	SourceVertex *vertex
 	LocalPort string
+
+	TargetVerget *vertex
 	RemotePort string
 }
 
@@ -109,7 +115,7 @@ func (graph *Graph) GetVertex(id ID) (vertex *vertex, err error) {
 // GetEdge gets the edge between the two vertices by input ids.
 // Try to get the edge from or to a vertex not in the graph will get an error.
 // Try to get the edge between two disconnected vertices will get an error.
-func (graph *Graph) GetEdges(from ID, to ID) (interface{}, error) {
+func (graph *Graph) GetEdges(from ID, to ID) ([]*edge, error) {
 	if _, exists := graph.vertices[from]; !exists {
 		return nil, fmt.Errorf("Vertex(from) %v is not found", from)
 	}
@@ -149,6 +155,10 @@ func (graph *Graph) GetAllVertices() map[ID]*vertex {
 	return graph.vertices
 }
 
+func (graph *Graph) GetAllEdges() map[ID]map[ID][]*edge {
+	return graph.egress
+}
+
 // AddVertex adds a new vertex into the graph.
 // Try to add a duplicate vertex will get an error.
 func (graph *Graph) AddVertex(id ID, name string) error {
@@ -156,9 +166,10 @@ func (graph *Graph) AddVertex(id ID, name string) error {
 		return fmt.Errorf("Vertex %v is duplicate", id)
 	}
 
-	graph.vertices[id] = &vertex{true,id.(string), name}
+	graph.vertices[id] = &vertex{true,vIndex, id.(string), name}
 	graph.egress[id] = make(map[ID][]*edge)
-	//graph.ingress[id] = make(map[ID]*edge)
+
+	vIndex = vIndex + 1
 
 	return nil
 }
@@ -184,12 +195,24 @@ func (graph *Graph) AddEdge(from ID, to ID, localPort, remotePort string, weight
 		return fmt.Errorf("Edge from %v (%s) to %v (%s) is duplicate", from, localPort, to, remotePort)
 	}
 
+	sourceVertex, err := graph.GetVertex(from)
+	if err != nil {
+		return fmt.Errorf("Vertex(from) %v is not found", from)
+	}
+
+	targetVertex, err := graph.GetVertex(to)
+	if err != nil {
+		return fmt.Errorf("Vertex(to) %v is not found", to)
+	}
+
 	// If we got this far, we can create the edge memory pointer and assign it.
 	edge := &edge{
 		weight:     weight,
 		enable:     true,
 		changed:    false,
+		SourceVertex: sourceVertex,
 		LocalPort:  localPort,
+		TargetVerget: targetVertex,
 		RemotePort: remotePort,
 	}
 
