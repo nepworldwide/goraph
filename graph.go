@@ -21,17 +21,17 @@ type Vertex interface {
 }
 
 // Edge interface represents an edge connecting two vertices.
-type Edge interface {
-	// Get returns the edge's inbound vertex, outbound vertex and weight.
-	Get() (from ID, to ID, weight float64)
-}
+//type Edge interface {
+//	Get returns the edge's inbound vertex, outbound vertex and weight.
+	//Get() (from ID, to ID, weight float64)
+//}
 
 // Graph is made up of vertices and edges.
 // Vertices in the graph must have an unique id.
 // Each edges in the graph connects two vertices directed with a weight.
 type Graph struct {
 	vertices map[ID]*vertex
-	egress   map[ID]map[ID][]*edge
+	egress   map[ID]map[ID][]*Edge
 }
 
 type vertex struct {
@@ -41,19 +41,19 @@ type vertex struct {
 	Name   string
 }
 
-type edge struct {
+type Edge struct {
 	weight  float64
 	enable  bool
 	changed bool
 
-	SourceVertex *vertex
-	LocalPort string
-
 	TargetVerget *vertex
-	RemotePort string
+	SourceVertex *vertex
+
+	LocalPort string // LocalPort is the port on THIS switch (vertex) that is connected to the OTHER switch
+	RemotePort string // RemotePort is the port on the OTHER switch that is connected to this switch.
 }
 
-func (edge *edge) getWeight() float64 {
+func (edge *Edge) GetWeight() float64 {
 	return edge.weight
 }
 
@@ -61,7 +61,7 @@ func (edge *edge) getWeight() float64 {
 func NewGraph() *Graph {
 	graph := new(Graph)
 	graph.vertices = make(map[ID]*vertex)
-	graph.egress = make(map[ID]map[ID][]*edge)
+	graph.egress = make(map[ID]map[ID][]*Edge)
 
 	return graph
 }
@@ -88,7 +88,7 @@ func (graph *Graph) HasEdge(from ID, to ID, localPort, remotePort string) bool {
 	return false
 }
 
-func (graph *Graph) GetEdge(from ID, to ID, localPort, remotePort string) (*edge, error) {
+func (graph *Graph) GetEdge(from ID, to ID, localPort, remotePort string) (*Edge, error) {
 	if edges, exists := graph.egress[from][to]; exists {
 		for _, edge := range edges {
 			if edge.LocalPort == localPort && edge.RemotePort == remotePort {
@@ -115,7 +115,7 @@ func (graph *Graph) GetVertex(id ID) (vertex *vertex, err error) {
 // GetEdge gets the edge between the two vertices by input ids.
 // Try to get the edge from or to a vertex not in the graph will get an error.
 // Try to get the edge between two disconnected vertices will get an error.
-func (graph *Graph) GetEdges(from ID, to ID) ([]*edge, error) {
+func (graph *Graph) GetEdges(from ID, to ID) ([]*Edge, error) {
 	if _, exists := graph.vertices[from]; !exists {
 		return nil, fmt.Errorf("Vertex(from) %v is not found", from)
 	}
@@ -155,7 +155,7 @@ func (graph *Graph) GetAllVertices() map[ID]*vertex {
 	return graph.vertices
 }
 
-func (graph *Graph) GetAllEdges() map[ID]map[ID][]*edge {
+func (graph *Graph) GetAllEdges() map[ID]map[ID][]*Edge {
 	return graph.egress
 }
 
@@ -167,7 +167,7 @@ func (graph *Graph) AddVertex(id ID, name string) error {
 	}
 
 	graph.vertices[id] = &vertex{true,vIndex, id.(string), name}
-	graph.egress[id] = make(map[ID][]*edge)
+	graph.egress[id] = make(map[ID][]*Edge)
 
 	vIndex = vIndex + 1
 
@@ -206,7 +206,7 @@ func (graph *Graph) AddEdge(from ID, to ID, localPort, remotePort string, weight
 	}
 
 	// If we got this far, we can create the edge memory pointer and assign it.
-	edge := &edge{
+	edge := &Edge{
 		weight:     weight,
 		enable:     true,
 		changed:    false,
@@ -291,7 +291,7 @@ func (graph *Graph) DeleteEdge(from ID, to ID) interface{} {
 // DeleteEdge deletes the edge between the vertices by the input id from the graph and gets the value of edge.
 // Try to delete an edge from or to a vertex not in the graph will get an error.
 // Try to delete an edge between disconnected vertices will get a nil.
-func (graph *Graph) DeleteEdgeByLocalPort(from ID, localPort string) *edge {
+func (graph *Graph) DeleteEdgeByLocalPort(from ID, localPort string) *Edge {
 	// First we need a list of all the vertices we have
 	all := graph.GetAllVertices()
 
@@ -321,8 +321,8 @@ func (graph *Graph) DeleteEdgeByLocalPort(from ID, localPort string) *edge {
 	}
 
 	graph.vertices[v.ID()] = &vertex{true}
-	graph.egress[v.ID()] = make(map[ID]*edge)
-	graph.ingress[v.ID()] = make(map[ID]*edge)
+	graph.egress[v.ID()] = make(map[ID]*Edge)
+	graph.ingress[v.ID()] = make(map[ID]*Edge)
 
 	for _, eachEdge := range v.Edges() {
 		from, to, weight := eachEdge.Get()
@@ -334,16 +334,16 @@ func (graph *Graph) DeleteEdgeByLocalPort(from ID, localPort string) *edge {
 		}
 
 		if _, exists := graph.egress[to]; !exists {
-			graph.egress[to] = make(map[ID]*edge)
+			graph.egress[to] = make(map[ID]*Edge)
 		}
 		if _, exists := graph.egress[from]; !exists {
-			graph.egress[from] = make(map[ID]*edge)
+			graph.egress[from] = make(map[ID]*Edge)
 		}
 		if _, exists := graph.ingress[from]; !exists {
-			graph.ingress[from] = make(map[ID]*edge)
+			graph.ingress[from] = make(map[ID]*Edge)
 		}
 		if _, exists := graph.ingress[to]; !exists {
-			graph.ingress[to] = make(map[ID]*edge)
+			graph.ingress[to] = make(map[ID]*Edge)
 		}
 
 		graph.egress[from][to] = &edge{weight, true, false}
@@ -400,7 +400,7 @@ func (graph *Graph) GetPathWeight(path []ID) (totalWeight float64) {
 		}
 		if x, exists := graph.egress[path[i]][path[i+1]]; exists {
 			for _, edge := range x {
-				totalWeight += edge.getWeight()
+				totalWeight += edge.GetWeight()
 			}
 		} else {
 			return math.Inf(1)
@@ -418,10 +418,22 @@ func (graph *Graph) DisableEdge(from, to ID) {
 
 // DisableVertex disables the vertex for further calculation.
 func (graph *Graph) DisableVertex(vertex ID) {
-	//for _, edge := range graph.egress[vertex] {
-	//	edge.enable = false
-	//}
+	for _, edges := range graph.egress[vertex] {
+		for _, edge := range edges {
+			edge.enable = false
+		}
+	}
 }
+
+// EnableVertex disables the vertex for further calculation.
+func (graph *Graph) EnableVertex(vertex ID) {
+	for _, edges := range graph.egress[vertex] {
+		for _, edge := range edges {
+			edge.enable = false
+		}
+	}
+}
+
 
 // DisablePath disables all the vertices in the path for further calculation.
 func (graph *Graph) DisablePath(path []ID) {
