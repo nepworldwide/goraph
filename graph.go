@@ -429,7 +429,7 @@ func (graph *Graph) DisableVertex(vertex ID) {
 func (graph *Graph) EnableVertex(vertex ID) {
 	for _, edges := range graph.egress[vertex] {
 		for _, edge := range edges {
-			edge.enable = false
+			edge.enable = true
 		}
 	}
 }
