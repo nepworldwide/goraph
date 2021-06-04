@@ -57,6 +57,10 @@ func (edge *Edge) GetWeight() float64 {
 	return edge.weight
 }
 
+func (edge *Edge) SetWeight(weight float64) {
+	edge.weight = weight
+}
+
 // NewGraph creates a new empty graph.
 func NewGraph() *Graph {
 	graph := new(Graph)
