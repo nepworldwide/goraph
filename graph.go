@@ -426,6 +426,15 @@ func (graph *Graph) GetPathWeight(path []ID) (totalWeight float64) {
 }
 
 // DisableEdge disables the edge for further calculation.
+func (graph *Graph) DisableEdge(from, to ID) {
+	// We only use this if we are finding multiple paths, which we don't
+	// therefor left out, for now.
+
+	//for _, edge := range graph.egress[from][to] {
+	//	edge.enable = false
+	//}
+}
+
 func (edge *Edge) Disable() {
 	edge.enable = false
 }
