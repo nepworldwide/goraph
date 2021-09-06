@@ -192,7 +192,7 @@ func (graph *Graph) AddVertex(id ID, name string) error {
 // Try to add an edge with -Inf weight will get an error.
 // Try to add an edge from or to a vertex not in the graph will get an error.
 // Try to add a duplicate edge will get an error.
-func (graph *Graph) AddEdge(from ID, to ID, localPort, remotePort string, weight float64) error {
+func (graph *Graph) AddEdge(from ID, to ID, localPort, remotePort string, weight float64, maxWeight float64) error {
 	if weight == math.Inf(-1) {
 		return fmt.Errorf("-inf weight is reserved for internal usage")
 	}
@@ -222,6 +222,7 @@ func (graph *Graph) AddEdge(from ID, to ID, localPort, remotePort string, weight
 	// If we got this far, we can create the edge memory pointer and assign it.
 	edge := &Edge{
 		weight:     weight,
+		maxWeight: maxWeight,
 		enable:     true,
 		changed:    false,
 		SourceVertex: sourceVertex,
