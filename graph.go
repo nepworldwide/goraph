@@ -42,7 +42,9 @@ type vertex struct {
 }
 
 type Edge struct {
-	weight  float64
+	weight  float64 // in our implementation used for the active bandwidth on the link, in megabits. So 10000 = 10 gigabit of traffic
+	maxWeight float64 // in our implementation used for the maximum allowed bandwidth on the link, in megabits.
+	                  // IMPORTANT: any reservations will be subtracted here, so this does NOT equal the port speed.
 	enable  bool
 	changed bool
 
@@ -59,6 +61,14 @@ func (edge *Edge) GetWeight() float64 {
 
 func (edge *Edge) SetWeight(weight float64) {
 	edge.weight = weight
+}
+
+func (edge *Edge) GetMaxWeight() float64 {
+	return edge.maxWeight
+}
+
+func (edge *Edge) SetMaxWeight(weight float64) {
+	edge.maxWeight = weight
 }
 
 // NewGraph creates a new empty graph.
