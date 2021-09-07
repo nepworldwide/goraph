@@ -317,8 +317,6 @@ func (graph *Graph) DeleteEdgeByLocalPort(from ID, localPort string) *Edge {
 				if edge.LocalPort == localPort { // If the localport matches
 					graph.egress[from][to] = append(graph.egress[from][to][:i], graph.egress[from][to][i+1:]...) //slick trick, to kick out this guy.
 
-					fmt.Println(from, "is not longer connected from", edge.LocalPort, "to", to, edge.RemotePort)
-
 					return edge
 				}
 			}
