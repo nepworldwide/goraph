@@ -52,7 +52,9 @@ type Edge struct {
 	SourceVertex *vertex
 
 	LocalPort string // LocalPort is the port on THIS switch (vertex) that is connected to the OTHER switch
+	LocalPortID string // uuid of the localPort in TFC API
 	RemotePort string // RemotePort is the port on the OTHER switch that is connected to this switch.
+	RemotePortID string // uuid of the remotePort in TFC API
 }
 
 func (edge *Edge) GetWeight() float64 {
@@ -192,7 +194,7 @@ func (graph *Graph) AddVertex(id ID, name string) error {
 // Try to add an edge with -Inf weight will get an error.
 // Try to add an edge from or to a vertex not in the graph will get an error.
 // Try to add a duplicate edge will get an error.
-func (graph *Graph) AddEdge(from ID, to ID, localPort, remotePort string, weight float64, maxWeight float64) error {
+func (graph *Graph) AddEdge(from ID, to ID, localPort, localPortId, remotePort, remotePortId string, weight float64, maxWeight float64) error {
 	if weight == math.Inf(-1) {
 		return fmt.Errorf("-inf weight is reserved for internal usage")
 	}
@@ -227,8 +229,10 @@ func (graph *Graph) AddEdge(from ID, to ID, localPort, remotePort string, weight
 		changed:    false,
 		SourceVertex: sourceVertex,
 		LocalPort:  localPort,
+		LocalPortID: localPortId,
 		TargetVerget: targetVertex,
 		RemotePort: remotePort,
+		RemotePortID: remotePortId,
 	}
 
 	graph.egress[from][to] = append(graph.egress[from][to], edge)
