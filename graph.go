@@ -62,7 +62,7 @@ func (edge *Edge) GetWeight() float64 {
 	return edge.weight
 }
 
-func (edge *Edge) SetTempWeight0(weight float64) {
+func (edge *Edge) SetTempWeight0() {
 	edge.tempWeight = edge.weight
 	edge.weight = 0
 }
