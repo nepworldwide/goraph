@@ -37,13 +37,16 @@ func (graph *Graph) Dijkstra(source ID) (dist map[ID]float64, prev map[ID]ID, er
 				if edge.GetWeight() < 0 {
 					return nil, nil, fmt.Errorf("Negative weight form vertex %v to vertex %v is not allowed", min, to)
 				}
+
 				if !edge.enable {
 					continue
 				}
+
 				if dist[min]+edge.GetWeight() < dist[to] {
 					heap.DecreaseKey(to, dist[min]+edge.GetWeight())
 					prev[to] = min
-					dist[to] = dist[min] + edge.GetWeight()
+
+					dist[to] = dist[min] + edge.GetWeight() + 500000 // Every hop counts for 500k
 				}
 			}
 		}
