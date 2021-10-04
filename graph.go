@@ -42,6 +42,7 @@ type vertex struct {
 }
 
 type Edge struct {
+	tempWeight float64 // In case we temp set the weight to 0 (to force path re-use) we store the old value here, so we can put it back.
 	weight  float64 // in our implementation used for the active bandwidth on the link, in megabits. So 10000 = 10 gigabit of traffic
 	maxWeight float64 // in our implementation used for the maximum allowed bandwidth on the link, in megabits.
 	                  // IMPORTANT: any reservations will be subtracted here, so this does NOT equal the port speed.
@@ -59,6 +60,16 @@ type Edge struct {
 
 func (edge *Edge) GetWeight() float64 {
 	return edge.weight
+}
+
+func (edge *Edge) SetTempWeight0(weight float64) {
+	edge.tempWeight = edge.weight
+	edge.weight = 0
+}
+
+func (edge *Edge) ResetTempWeight0() {
+	edge.weight = edge.tempWeight
+	edge.tempWeight = 0
 }
 
 func (edge *Edge) SetWeight(weight float64) {
