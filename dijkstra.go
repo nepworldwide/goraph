@@ -46,7 +46,10 @@ func (graph *Graph) Dijkstra(source ID) (dist map[ID]float64, prev map[ID]ID, er
 					heap.DecreaseKey(to, dist[min]+edge.GetWeight())
 					prev[to] = min
 
-					dist[to] = dist[min] + edge.GetWeight() + 500000 // Every hop counts for 500k
+					dist[to] = dist[min] + edge.GetWeight()
+					if dist[to] > 0 { // + 500000 // Every hop counts for 500k, but only if the paths are not "free"
+						dist[to] = dist[to] + 500000
+					}
 				}
 			}
 		}
