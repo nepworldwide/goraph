@@ -48,12 +48,9 @@ func (graph *Graph) Dijkstra(source ID) (dist map[ID]float64, prev map[ID]ID, er
 
 					dist[to] = dist[min] + edge.GetWeight()
 					//Disabled in attempt to troubleshoot finding paths through extra spines
-					//if dist[to] > 0 { // + 500000 // Every hop counts for 500k, but only if the paths are not "free"
-					//	dist[to] = dist[to] + 500000
-					//}
-
-					//Disable me and uncomment 3 lines above to revert this
-					//dist[to] = dist[to] + 500000
+					if dist[to] > 0 { // + 500000 // Every hop counts for 500k, but only if the paths are not "free"
+						dist[to] = dist[to] + 500000
+					}
 				}
 			}
 		}
