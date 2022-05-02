@@ -53,7 +53,7 @@ func (graph *Graph) Dijkstra(source ID) (dist map[ID]float64, prev map[ID]ID, er
 					//}
 
 					//Disable me and uncomment 3 lines above to revert this
-					dist[to] = dist[to] + 500000
+					//dist[to] = dist[to] + 500000
 				}
 			}
 		}
