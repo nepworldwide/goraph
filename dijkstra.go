@@ -42,16 +42,19 @@ func (graph *Graph) Dijkstra(source ID) (dist map[ID]float64, prev map[ID]ID, er
 					continue
 				}
 
+				prevWeight := edge.GetWeight()
+				if edge.GetWeight() > 0 {
+					edge.SetWeight(edge.GetWeight() + 500000)
+				}
+
 				if dist[min]+edge.GetWeight() < dist[to] {
 					heap.DecreaseKey(to, dist[min]+edge.GetWeight())
 					prev[to] = min
 
 					dist[to] = dist[min] + edge.GetWeight()
-					//Disabled in attempt to troubleshoot finding paths through extra spines
-					if dist[to] > 0 { // + 500000 // Every hop counts for 500k, but only if the paths are not "free"
-						dist[to] = dist[to] + 500000
-					}
 				}
+
+				edge.SetWeight(prevWeight)
 			}
 		}
 	}
