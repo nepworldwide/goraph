@@ -152,7 +152,16 @@ func (graph *Graph) GetEdges(from ID, to ID) ([]*Edge, error) {
 	}
 
 	if edge, exists := graph.egress[from][to]; exists {
-		return edge, nil
+		var res []*Edge
+
+		// Only add the enabled edges to the result.
+		for _, e := range edge {
+			if e.IsEnabled() {
+				res = append(res, e)
+			}
+		}
+
+		return res, nil
 	}
 
 	return nil, fmt.Errorf("Edge from %v to %v is not found", from, to)
