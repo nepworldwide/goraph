@@ -23,7 +23,7 @@ type Vertex interface {
 // Edge interface represents an edge connecting two vertices.
 //type Edge interface {
 //	Get returns the edge's inbound vertex, outbound vertex and weight.
-	//Get() (from ID, to ID, weight float64)
+//Get() (from ID, to ID, weight float64)
 //}
 
 // Graph is made up of vertices and edges.
@@ -43,18 +43,18 @@ type vertex struct {
 
 type Edge struct {
 	tempWeight float64 // In case we temp set the weight to 0 (to force path re-use) we store the old value here, so we can put it back.
-	weight  float64 // in our implementation used for the active bandwidth on the link, in megabits. So 10000 = 10 gigabit of traffic
-	maxWeight float64 // in our implementation used for the maximum allowed bandwidth on the link, in megabits.
-	                  // IMPORTANT: any reservations will be subtracted here, so this does NOT equal the port speed.
+	weight     float64 // in our implementation used for the active bandwidth on the link, in megabits. So 10000 = 10 gigabit of traffic
+	maxWeight  float64 // in our implementation used for the maximum allowed bandwidth on the link, in megabits.
+	// IMPORTANT: any reservations will be subtracted here, so this does NOT equal the port speed.
 	enable  bool
 	changed bool
 
 	TargetVerget *vertex
 	SourceVertex *vertex
 
-	LocalPort string // LocalPort is the port on THIS switch (vertex) that is connected to the OTHER switch
-	LocalPortID string // uuid of the localPort in TFC API
-	RemotePort string // RemotePort is the port on the OTHER switch that is connected to this switch.
+	LocalPort    string // LocalPort is the port on THIS switch (vertex) that is connected to the OTHER switch
+	LocalPortID  string // uuid of the localPort in TFC API
+	RemotePort   string // RemotePort is the port on the OTHER switch that is connected to this switch.
 	RemotePortID string // uuid of the remotePort in TFC API
 }
 
@@ -95,7 +95,7 @@ func NewGraph() *Graph {
 
 // GetVertex get a vertex by input id.
 // Try to get a vertex not in the graph will get an error.
-func (graph *Graph) HasVertex(id ID) (bool) {
+func (graph *Graph) HasVertex(id ID) bool {
 	if _, exists := graph.vertices[id]; exists {
 		return true
 	}
@@ -193,7 +193,7 @@ func (graph *Graph) AddVertex(id ID, name string) error {
 		return fmt.Errorf("Vertex %v is duplicate", id)
 	}
 
-	graph.vertices[id] = &vertex{true,vIndex, id.(string), name}
+	graph.vertices[id] = &vertex{true, vIndex, id.(string), name}
 	graph.egress[id] = make(map[ID][]*Edge)
 
 	vIndex = vIndex + 1
@@ -234,15 +234,15 @@ func (graph *Graph) AddEdge(from ID, to ID, localPort, localPortId, remotePort, 
 
 	// If we got this far, we can create the edge memory pointer and assign it.
 	edge := &Edge{
-		weight:     weight,
-		maxWeight: maxWeight,
-		enable:     true,
-		changed:    false,
+		weight:       weight,
+		maxWeight:    maxWeight,
+		enable:       true,
+		changed:      false,
 		SourceVertex: sourceVertex,
-		LocalPort:  localPort,
-		LocalPortID: localPortId,
+		LocalPort:    localPort,
+		LocalPortID:  localPortId,
 		TargetVerget: targetVertex,
-		RemotePort: remotePort,
+		RemotePort:   remotePort,
 		RemotePortID: remotePortId,
 	}
 
@@ -448,6 +448,14 @@ func (graph *Graph) DisableEdge(from, to ID) {
 	//}
 }
 
+func (edge *Edge) IsDisabled() bool {
+	return !edge.enable
+}
+
+func (edge *Edge) IsEnabled() bool {
+	return edge.enable
+}
+
 func (edge *Edge) Disable() {
 	edge.enable = false
 }
@@ -473,7 +481,6 @@ func (graph *Graph) EnableVertex(vertex ID) {
 		}
 	}
 }
-
 
 // DisablePath disables all the vertices in the path for further calculation.
 func (graph *Graph) DisablePath(path []ID) {
